@@ -18,6 +18,7 @@ classdef app1 < matlab.apps.AppBase % Инициализация элемент�
  DropDown matlab.ui.control.DropDown
  end
  methods (Access = private)
+ %----------------------------------------------------------------------------------------------------------
  % Button pushed function: Button (листинг алгоритма выделения границ)
  function ButtonPushed(app, event)
  % Инициализируем глобальные переменные
@@ -44,7 +45,6 @@ classdef app1 < matlab.apps.AppBase % Инициализация элемент�
  tr = app.EditField_2.Value;
  nm = app.EditField_3.Value;
  ed = app.EditField_4.Value;
-44
  del = round(nm * 6);
  % Сглаживание изображения фильтром Гаусса
  smoothImg = imgaussfilt(grayImg, gau);
@@ -97,7 +97,6 @@ classdef app1 < matlab.apps.AppBase % Инициализация элемент�
  [5 -3 -3; 5 0 -3; 5 -3 -3]
  [5 5 -3; 5 0 -3; -3 -3 -3]
  };
-45
  gradSum = 0;
  for i = 1:length(KirschMasks)
  % Применение операторов Кирша
@@ -133,6 +132,7 @@ classdef app1 < matlab.apps.AppBase % Инициализация элемент�
  save = 0;
  end
  end
+ %-----------------------------------------------------------------------------------------------------------
  % Button pushed function: Button_2 (листинг алгоритма загрузки изображения)
  function Button_2Pushed(app, event)
  global img;
@@ -148,8 +148,6 @@ classdef app1 < matlab.apps.AppBase % Инициализация элемент�
  save = 0;
  return;
  end
- 
-46
 % Переменная ext возвращает индекс элемента из матрицы разрешенных форматов
  if (ext == 1 || ext == 2 || ext == 3)
  img = imread(fullfile(pathname, filename));
@@ -164,6 +162,7 @@ classdef app1 < matlab.apps.AppBase % Инициализация элемент�
  save = 0;
  end
  end
+ %-------------------------------------------------------------------------------------------------------
  % Button pushed function: Button_3 (листинг алгоритма сохранения результата)
  function Button_3Pushed(app, event)
  global save;
@@ -188,6 +187,7 @@ classdef app1 < matlab.apps.AppBase % Инициализация элемент�
  end
  end
  end
+ %------------------------------------------------------------------------------------------------------------
  % App initialization and construction (инициализация параметров интерфейса)
  methods (Access = private)
  % Create UIFigure and components
@@ -198,7 +198,6 @@ classdef app1 < matlab.apps.AppBase % Инициализация элемент�
  app.InputParametersUIFigure.Position = [100 100 524 288];
  app.InputParametersUIFigure.Name = 'InputParameters';
  app.InputParametersUIFigure.Resize = 'off';
-47
  % Create Button
  app.Button = uibutton(app.InputParametersUIFigure, 'push');
  app.Button.ButtonPushedFcn = createCallbackFcn(app, @ButtonPushed, true);
@@ -245,7 +244,6 @@ classdef app1 < matlab.apps.AppBase % Инициализация элемент�
  app.Button_2.Text = 'Выбрать изображение';
  % Create Label_3
  app.Label_3 = uilabel(app.InputParametersUIFigure);
-48
  app.Label_3.HorizontalAlignment = 'center';
  app.Label_3.FontName = 'Comic Sans MS';
  app.Label_3.FontColor = [0.4941 0.698 0.902];
@@ -292,7 +290,6 @@ classdef app1 < matlab.apps.AppBase % Инициализация элемент�
  app.Label_6 = uilabel(app.InputParametersUIFigure);
  app.Label_6.FontName = 'Comic Sans MS';
  app.Label_6.FontSize = 14;
-49
  app.Label_6.FontColor = [0 0.451 0.7412];
  app.Label_6.Position = [19 228 75 22];
  app.Label_6.Text = 'Оператор:';
