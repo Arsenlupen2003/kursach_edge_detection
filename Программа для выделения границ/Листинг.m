@@ -1,192 +1,192 @@
 classdef app1 < matlab.apps.AppBase % Инициализация элементов интерфейса
- % Properties that correspond to app components
- properties (Access = public)
- InputParametersUIFigure matlab.ui.Figure
- Button matlab.ui.control.Button
- Label matlab.ui.control.Label
- EditField matlab.ui.control.NumericEditField
- Label_2 matlab.ui.control.Label
- EditField_2 matlab.ui.control.NumericEditField
- Button_2 matlab.ui.control.Button
- Label_3 matlab.ui.control.Label
- Button_3 matlab.ui.control.Button
- Label_4 matlab.ui.control.Label
- EditField_3 matlab.ui.control.NumericEditField
- Label_5 matlab.ui.control.Label
- EditField_4 matlab.ui.control.NumericEditField
- Label_6 matlab.ui.control.Label
- DropDown matlab.ui.control.DropDown
+   % Properties that correspond to app components
+   properties (Access = public)
+   InputParametersUIFigure matlab.ui.Figure
+   Button matlab.ui.control.Button
+   Label matlab.ui.control.Label
+   EditField matlab.ui.control.NumericEditField
+   Label_2 matlab.ui.control.Label
+   EditField_2 matlab.ui.control.NumericEditField
+   Button_2 matlab.ui.control.Button
+   Label_3 matlab.ui.control.Label
+   Button_3 matlab.ui.control.Button
+   Label_4 matlab.ui.control.Label
+   EditField_3 matlab.ui.control.NumericEditField
+   Label_5 matlab.ui.control.Label
+   EditField_4 matlab.ui.control.NumericEditField
+   Label_6 matlab.ui.control.Label
+   DropDown matlab.ui.control.DropDown
  end
  methods (Access = private)
  %----------------------------------------------------------------------------------------------------------
  % Button pushed function: Button (листинг алгоритма выделения границ)
  function ButtonPushed(app, event)
- % Инициализируем глобальные переменные
- global img;
- global edgeImg;
- % save будет принимать значение 1, когда обработка будет произведена успешно
- global save;
- % Процесс обработки изображения начнется, если переменная img не будет пуста
- if (~isnan(img))
- if(ndims(img) == 3)
- % Преобразование изображения в оттенки серого если оно цветное
- grayImg = rgb2gray(img);
- else
- % Переменная grayImg есть img, если исходная картинка полутоновая
- grayImg = img;
- end
- % Увеличение размера изображения для более точной обработки
- if size(grayImg) < 2000
- % Увеличение изображения в 2 раза, если оно меньше 2000 пикселей
- grayImg = imresize(grayImg, 2);
- end
- % Переменные для регулировки границ, вводимые пользователем
- gau = app.EditField.Value;
- tr = app.EditField_2.Value;
- nm = app.EditField_3.Value;
- ed = app.EditField_4.Value;
- del = round(nm * 6);
- % Сглаживание изображения фильтром Гаусса
- smoothImg = imgaussfilt(grayImg, gau);
- if(app.DropDown.Value == "Собеля")
- % Операторы Собеля для вычисления градиентов
- sobelVertical = [-1, -2, -1; 0, 0, 0; 1, 2, 1];
- sobelHorizontal = [-1, 0, 1; -2, 0, 2; -1, 0, 1];
- % Применение операторов Собеля к изображению
- gradX = conv2(double(smoothImg), sobelHorizontal, 'same');
- gradY = conv2(double(smoothImg), sobelVertical, 'same');
- % Вычисление общего градиента и направления
- gradMag = sqrt(gradX.^2 + gradY.^2);
- elseif (app.DropDown.Value == "Робертса")
- % Операторы Робертса для вычисления градиентов
- h_roberts_x = [1, 0; 0, -1];
- h_roberts_y = [0, 1; -1, 0];
- % Применение операторов Робертса к изображению
- grad_x = conv2(double(smoothImg), h_roberts_x, 'same');
- grad_y = conv2(double(smoothImg), h_roberts_y, 'same');
- % Вычисление общего градиента
- gradMag = sqrt(grad_x.^2 + grad_y.^2);
- % Выравнивание параметров предотвращения повторной настройки
- elseif(app.DropDown.Value == "Превитта")
- % Операторы Превитта для вычисления градиентов
- PrewX = [-1, -1, -1; 0, 0, 0; 1, 1, 1];
- PrewY = [-1, 0, 1; -1, 0, 1; -1, 0, 1];
- % Применение операторов Превитта к изображению
- gradX = conv2(double(smoothImg), PrewX, 'same');
- gradY = conv2(double(smoothImg), PrewY, 'same');
- % Вычисление общего градиента и направления
- gradMag = sqrt(gradX.^2 + gradY.^2);
- elseif (app.DropDown.Value == "Шарра")
- % Определение операторов Шарра
- sharX = [-3 0 3; -10 0 10; -3 0 3];
- sharY = [-3 -10 -3; 0 0 0; 3 10 3];
- % Применение операторов Шарра
- grad_x = conv2(double(smoothImg), sharX, 'same');
- grad_y = conv2(double(smoothImg), sharY, 'same');
- % Вычисление градиента магнитуды
- gradMag = sqrt(grad_x.^2 + grad_y.^2);
- elseif (app.DropDown.Value == "Кирша")
- % Определение операторов Кирша для 8 направлений
- KirschMasks = {
- [5 5 5; -3 0 -3; -3 -3 -3]
- [-3 5 5; -3 0 5; -3 -3 -3]
- [-3 -3 5; -3 0 5; -3 -3 5]
- [-3 -3 -3; -3 0 5; -3 5 5]
- [-3 -3 -3; -3 0 -3; 5 5 5]
- [-3 -3 -3; 5 0 -3; 5 5 -3]
- [5 -3 -3; 5 0 -3; 5 -3 -3]
- [5 5 -3; 5 0 -3; -3 -3 -3]
- };
- gradSum = 0;
- for i = 1:length(KirschMasks)
- % Применение операторов Кирша
- grad = conv2(double(smoothImg), KirschMasks{i}, 'same');
- gradSum = grad.^2+gradSum;
- end
- % Градиент магнитуды
- gradMag = sqrt(gradSum);
- end
- % Нормализация значений яркости
- gradMag = ((gradMag / max(gradMag(:))) * 255);
- % Подавление немаксимумов
- nmsImg = imhmax(gradMag, 3*nm);
- % Применение порога для регулировки границ
- tresh = 0.1/tr * 255;
- ThreshImg = nmsImg >= tresh;
- % Утончение границ
- ThinImg = bwmorph(ThreshImg, 'thin', inf);
- % Удаление изолированных пикселей
- DenoisedImg = bwareaopen(ThinImg, del);
- % Утолщение границ для лучшего визуального восприятия
- edgeImg = imdilate(DenoisedImg, strel('disk', ed));
- % Вывод результатов
- subplot(1,2,1), imshow(img), title('Исходное изображение');
- subplot(1,2,2), imshow(edgeImg), title('Результат выделения границ');
- app.Label_3.Text = ('Готово!');
- % Переменную save приравниваем к 1, т.к. процесс обработки прошел успешно
- save = 1;
- else
- % Если переменная img будет пуста (когда не выбран файл)
- app.Label_3.Text = ('Сначала выберите изображение');
- % Приравниваем save к нулю, так как нечего обрабатывать
- save = 0;
- end
+   % Инициализируем глобальные переменные
+   global img;
+   global edgeImg;
+   % save будет принимать значение 1, когда обработка будет произведена успешно
+   global save;
+   % Процесс обработки изображения начнется, если переменная img не будет пуста
+   if (~isnan(img))
+     if(ndims(img) == 3)
+       % Преобразование изображения в оттенки серого если оно цветное
+       grayImg = rgb2gray(img);
+     else
+       % Переменная grayImg есть img, если исходная картинка полутоновая
+       grayImg = img;
+     end
+     % Увеличение размера изображения для более точной обработки
+     if size(grayImg) < 2000
+       % Увеличение изображения в 2 раза, если оно меньше 2000 пикселей
+       grayImg = imresize(grayImg, 2);
+     end
+     % Переменные для регулировки границ, вводимые пользователем
+     gau = app.EditField.Value;
+     tr = app.EditField_2.Value;
+     nm = app.EditField_3.Value;
+     ed = app.EditField_4.Value;
+     del = round(nm * 6);
+     % Сглаживание изображения фильтром Гаусса
+     smoothImg = imgaussfilt(grayImg, gau);
+     if(app.DropDown.Value == "Собеля")
+       % Операторы Собеля для вычисления градиентов
+       sobelVertical = [-1, -2, -1; 0, 0, 0; 1, 2, 1];
+       sobelHorizontal = [-1, 0, 1; -2, 0, 2; -1, 0, 1];
+       % Применение операторов Собеля к изображению
+       gradX = conv2(double(smoothImg), sobelHorizontal, 'same');
+       gradY = conv2(double(smoothImg), sobelVertical, 'same');
+       % Вычисление общего градиента и направления
+       gradMag = sqrt(gradX.^2 + gradY.^2);
+     elseif (app.DropDown.Value == "Робертса")
+       % Операторы Робертса для вычисления градиентов
+       h_roberts_x = [1, 0; 0, -1];
+       h_roberts_y = [0, 1; -1, 0];
+       % Применение операторов Робертса к изображению
+       grad_x = conv2(double(smoothImg), h_roberts_x, 'same');
+       grad_y = conv2(double(smoothImg), h_roberts_y, 'same');
+       % Вычисление общего градиента
+       gradMag = sqrt(grad_x.^2 + grad_y.^2);
+       % Выравнивание параметров предотвращения повторной настройки
+     elseif(app.DropDown.Value == "Превитта")
+       % Операторы Превитта для вычисления градиентов
+       PrewX = [-1, -1, -1; 0, 0, 0; 1, 1, 1];
+       PrewY = [-1, 0, 1; -1, 0, 1; -1, 0, 1];
+       % Применение операторов Превитта к изображению
+       gradX = conv2(double(smoothImg), PrewX, 'same');
+       gradY = conv2(double(smoothImg), PrewY, 'same');
+       % Вычисление общего градиента и направления
+       gradMag = sqrt(gradX.^2 + gradY.^2);
+     elseif (app.DropDown.Value == "Шарра")
+       % Определение операторов Шарра
+       sharX = [-3 0 3; -10 0 10; -3 0 3];
+       sharY = [-3 -10 -3; 0 0 0; 3 10 3];
+       % Применение операторов Шарра
+       grad_x = conv2(double(smoothImg), sharX, 'same');
+       grad_y = conv2(double(smoothImg), sharY, 'same');
+       % Вычисление градиента магнитуды
+       gradMag = sqrt(grad_x.^2 + grad_y.^2);
+     elseif (app.DropDown.Value == "Кирша")
+       % Определение операторов Кирша для 8 направлений
+       KirschMasks = {
+       [5 5 5; -3 0 -3; -3 -3 -3]
+       [-3 5 5; -3 0 5; -3 -3 -3]
+       [-3 -3 5; -3 0 5; -3 -3 5]
+       [-3 -3 -3; -3 0 5; -3 5 5]
+       [-3 -3 -3; -3 0 -3; 5 5 5]
+       [-3 -3 -3; 5 0 -3; 5 5 -3]
+       [5 -3 -3; 5 0 -3; 5 -3 -3]
+       [5 5 -3; 5 0 -3; -3 -3 -3]
+       };
+       gradSum = 0;
+       for i = 1:length(KirschMasks)
+         % Применение операторов Кирша
+         grad = conv2(double(smoothImg), KirschMasks{i}, 'same');
+         gradSum = grad.^2+gradSum;
+       end
+       % Градиент магнитуды
+       gradMag = sqrt(gradSum);
+     end
+     % Нормализация значений яркости
+     gradMag = ((gradMag / max(gradMag(:))) * 255);
+     % Подавление немаксимумов
+     nmsImg = imhmax(gradMag, 3*nm);
+     % Применение порога для регулировки границ
+     tresh = 0.1/tr * 255;
+     ThreshImg = nmsImg >= tresh;
+     % Утончение границ
+     ThinImg = bwmorph(ThreshImg, 'thin', inf);
+     % Удаление изолированных пикселей
+     DenoisedImg = bwareaopen(ThinImg, del);
+     % Утолщение границ для лучшего визуального восприятия
+     edgeImg = imdilate(DenoisedImg, strel('disk', ed));
+     % Вывод результатов
+     subplot(1,2,1), imshow(img), title('Исходное изображение');
+     subplot(1,2,2), imshow(edgeImg), title('Результат выделения границ');
+     app.Label_3.Text = ('Готово!');
+     % Переменную save приравниваем к 1, т.к. процесс обработки прошел успешно
+     save = 1;
+   else
+     % Если переменная img будет пуста (когда не выбран файл)
+     app.Label_3.Text = ('Сначала выберите изображение');
+     % Приравниваем save к нулю, так как нечего обрабатывать
+     save = 0;
+   end
  end
  %-----------------------------------------------------------------------------------------------------------
  % Button pushed function: Button_2 (листинг алгоритма загрузки изображения)
  function Button_2Pushed(app, event)
- global img;
- global save;
- % Переменная ext возвращает значение индекса матрицы разрешенных форматов
- [filename, pathname, ext] = uigetfile({'*.jpg';'*.png';'*.jpeg'}, 'Выберите изображение');
- % Если выбор изображения был отменен
- if isequal(filename,0) || isequal(pathname,0)
- app.Label_3.Text = ('Изображение не выбрано. Повторите попытку');
- % Разыменование img, поскольку файл не выбран
- img = nan;
- % save приравниваем к 0, так как файл не был выбран
- save = 0;
- return;
- end
-% Переменная ext возвращает индекс элемента из матрицы разрешенных форматов
- if (ext == 1 || ext == 2 || ext == 3)
- img = imread(fullfile(pathname, filename));
- app.Label_3.Text = ('Теперь нажмите "Выделить границы"');
- return;
- else
- % При выборе неразрешенного формата ext вернет другое значение
- app.Label_3.Text = ('Выбран неверный тип файла');
- % Разыменование img, поскольку выбран неверный формат
- img = nan;
- % save приравниваем к 0, так как был выбран неверный формат
- save = 0;
- end
+   global img;
+   global save;
+   % Переменная ext возвращает значение индекса матрицы разрешенных форматов
+   [filename, pathname, ext] = uigetfile({'*.jpg';'*.png';'*.jpeg'}, 'Выберите изображение');
+   % Если выбор изображения был отменен
+   if isequal(filename,0) || isequal(pathname,0)
+     app.Label_3.Text = ('Изображение не выбрано. Повторите попытку');
+     % Разыменование img, поскольку файл не выбран
+     img = nan;
+     % save приравниваем к 0, так как файл не был выбран
+     save = 0;
+     return;
+   end
+   % Переменная ext возвращает индекс элемента из матрицы разрешенных форматов
+   if (ext == 1 || ext == 2 || ext == 3)
+     img = imread(fullfile(pathname, filename));
+     app.Label_3.Text = ('Теперь нажмите "Выделить границы"');
+     return;
+   else
+     % При выборе неразрешенного формата ext вернет другое значение
+     app.Label_3.Text = ('Выбран неверный тип файла');
+     % Разыменование img, поскольку выбран неверный формат
+     img = nan;
+     % save приравниваем к 0, так как был выбран неверный формат
+     save = 0;
+   end
  end
  %-------------------------------------------------------------------------------------------------------
  % Button pushed function: Button_3 (листинг алгоритма сохранения результата)
  function Button_3Pushed(app, event)
- global save;
- global edgeImg;
- % Если save будет равен 1, тогда можно будет сохранить файл
- if save == 1
- % Запрос на выбор папки
- folder_name = uigetdir;
- % Сохранение изображения в выбранной папке
- if folder_name ~= 0 % Если папка была выбрана
- [~, baseFileName, ext] = fileparts('example.jpg');
- fullFileName = fullfile(folder_name, [baseFileName, ext]);
- imwrite(edgeImg, fullFileName); % Сохранение изображения
- app.Label_3.Text = (['Изображение сохранено в папке: ', fullFileName]);
- else
- % Иначе папка не выбрана и возможность сохранить будет недоступна 
- app.Label_3.Text = ('Сохранение отменено');
+   global save;
+   global edgeImg;
+   % Если save будет равен 1, тогда можно будет сохранить файл
+   if save == 1
+     % Запрос на выбор папки
+     folder_name = uigetdir;
+     % Сохранение изображения в выбранной папке
+     if folder_name ~= 0 % Если папка была выбрана
+       [~, baseFileName, ext] = fileparts('example.jpg');
+       fullFileName = fullfile(folder_name, [baseFileName, ext]);
+       imwrite(edgeImg, fullFileName); % Сохранение изображения
+       app.Label_3.Text = (['Изображение сохранено в папке: ', fullFileName]);
+     else
+       % Иначе папка не выбрана и возможность сохранить будет недоступна 
+       app.Label_3.Text = ('Сохранение отменено');
+     end
+   else
+     % Если save равен другому значению (нулю), сохранение будет невозможно
+     app.Label_3.Text = ('Для сохранения сначала нужно выделить границы');
+   end
  end
- else
- % Если save равен другому значению (нулю), сохранение будет невозможно
- app.Label_3.Text = ('Для сохранения сначала нужно выделить границы');
- end
- end
- end
+end
  %------------------------------------------------------------------------------------------------------------
  % App initialization and construction (инициализация параметров интерфейса)
  methods (Access = private)
